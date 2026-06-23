@@ -1,0 +1,35 @@
+services:
+  mysql-usuarios:
+    image: mysql:8.0
+    container_name: mysql-usuarios
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_usuarios
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-usuarios-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  usuarios-app:
+    build: .
+    container_name: usuarios-microservicio
+    depends_on:
+      mysql-usuarios:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql-usuarios
+      DB_PORT: 3306
+      DB_NAME: db_usuarios
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: my-super-secret-key-that-is-long-enough-for-hs256-algorithm-use-only-for-dev
+    ports:
+      - "8089:8089"
+
+volumes:
+  mysql-usuarios-data:
